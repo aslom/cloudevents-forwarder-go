@@ -1,0 +1,22 @@
+apiVersion: serving.knative.dev/v1 # Current version of Knative
+kind: Service
+metadata:
+  name: cloudevents-forwarder-ksvc # The name of the app
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: kpa.autoscaling.knative.dev
+        autoscaling.knative.dev/metric: concurrency
+        autoscaling.knative.dev/target: "100"
+        autoscaling.knative.dev/minScale: "2"
+        autoscaling.knative.dev/maxScale: "2"
+    spec:
+      containers:
+        - image: ${IMAGE_NAME} # Reference to the image of the app
+          imagePullPolicy: Always 
+          env:
+            - name: CLOUDEVENTS_FORWARDER_TARGET 
+              value: "${CLOUDEVENTS_FORWARDER_TARGET}"
+            - name: CLOUDEVENTS_FORWARDER_SLEEP_SECONDS 
+              value: "${CLOUDEVENTS_FORWARDER_SLEEP_SECONDS}"

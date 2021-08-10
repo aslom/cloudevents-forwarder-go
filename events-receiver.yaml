@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: events-receiver-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &labels
+      app: events-receiver
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: events-receiver
+          image: ${IMAGE_NAME}
+          imagePullPolicy: Always
+          command: ["/cloudevents-forwarder"]
+          args: [  ]
+          env:
+          - name: NAME
+            value: "events-receiver"
+          - name: CLOUDEVENTS_FORWARDER_TARGET
+            value: "print"
+          ports:
+          - containerPort: 8080
+            name: http
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4096Mi"
+              cpu: "8000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: events-receiver
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port:   '8001'
+spec:
+ selector:
+   app: events-receiver
+ ports:
+   - protocol: TCP
+     port: 80
+     targetPort: 8080
+     name: http

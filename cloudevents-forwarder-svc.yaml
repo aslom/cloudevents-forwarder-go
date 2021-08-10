@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudevents-forwarder-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels: &labels
+      app: cloudevents-forwarder
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+        - name: cloudevents-forwarder
+          image: ${IMAGE_NAME}
+          imagePullPolicy: Always
+          command: ["/cloudevents-forwarder"]
+          args: [  ]
+          env:
+          - name: CLOUDEVENTS_FORWARDER_TARGET
+            value: "${CLOUDEVENTS_FORWARDER_TARGET}"
+          ports:
+          - containerPort: 8080
+            name: http
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "4096Mi"
+              cpu: "8000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudevents-forwarder
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port:   '8001'
+spec:
+ selector:
+   app: cloudevents-forwarder
+ ports:
+   - protocol: TCP
+     port: 80
+     targetPort: 8080
+     name: http
